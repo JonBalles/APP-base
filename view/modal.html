@@ -1,0 +1,157 @@
+<!-- Modal upload Data-->
+<div class="modal fade" id="uploadData" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+  aria-labelledby="staticBackdropLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="staticBackdropLabel">Carga de datos</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <label for="link">Ingresar ID o URL del sheet</label>
+        <input type="text" id="link" class="form-control" placeholder="https://docs.google.com/spreadsheets/...">
+        <label for="sheet" class="mt-2">Ingresar nombre de la hoja</label>
+        <input type="text" id="sheet" class="form-control" placeholder="Nombre de la hoja">
+        <small>Respetar mayúsculas al ingresar el nombre de la hoja</small>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+        <button type="button" id="cargar" class="btn btn-primary">Cargar Datos</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal error Data-->
+<div class="modal fade" id="errorData" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+  aria-labelledby="errorModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title" id="errorModalLabel">
+          <i class="fas fa-exclamation-triangle"></i> Error en la carga
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p id="errorMessage">Ingrese link o ID del sheet y el nombre de la hoja para continuar</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Comprendido</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Envío en Progreso -->
+<div class="modal fade" id="progressModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">
+          <i class="fas fa-paper-plane"></i> Enviando boletines
+          <span class="spinner-border spinner-border-sm ms-2" id="spinnerEnvio" role="status"></span>
+        </h5>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <div class="d-flex justify-content-between mb-2">
+            <span><strong>Progreso:</strong></span>
+            <span><strong id="progressText">0 de 0</strong></span>
+          </div>
+          <div class="progress" style="height: 25px;">
+            <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-success"
+              role="progressbar" style="width: 0%"></div>
+          </div>
+        </div>
+        <div id="progressContainer"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="btnCerrarProgreso" disabled>Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Envío Completado -->
+<div class="modal fade" id="completedModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title">
+          <i class="fas fa-check-circle"></i> Envío completado
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="text-center mb-3">
+          <i class="fas fa-check-circle text-success" style="font-size: 64px;"></i>
+        </div>
+        <h6>Resumen del envío:</h6>
+        <ul class="list-group">
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            Exitosos
+            <span class="badge bg-success rounded-pill" id="exitososCount">0</span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            Errores
+            <span class="badge bg-danger rounded-pill" id="erroresCount">0</span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            Total procesados
+            <span class="badge bg-primary rounded-pill" id="totalCount">0</span>
+          </li>
+        </ul>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-success" data-bs-dismiss="modal">Aceptar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Confirmación Limpiar -->
+<div class="modal fade" id="confirmLimpiarModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-warning">
+        <h5 class="modal-title">
+          <i class="fas fa-exclamation-triangle"></i> Confirmar acción
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p>¿Estás seguro de que deseas limpiar todos los registros marcados como enviados?</p>
+        <p class="text-danger"><strong>Esta acción no se puede deshacer.</strong></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-warning" onclick="confirmarLimpiarEnviados()">
+          <i class="fas fa-broom"></i> Sí, limpiar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Limpiar exitoso -->
+<div class="modal fade" id="finalizarLimpiarModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-success">
+        <h5 class="modal-title">
+          <i class="fas fa-exclamation-triangle"></i> Limpieza de registro
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p><strong id="resultadoReg"></strong></p>
+        <p><strong id="resultadoHis"></strong></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

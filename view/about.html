@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ECbox - API Handling</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    /* --- GENERAL --- */
+    body {
+      background-color: #fafafa;
+      font-family: 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      overflow: hidden;
+    }
+
+    /* --- CARD BASE --- */
+    .card {
+      background: #fff;
+      border: none;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      padding: 45px 60px;
+      text-align: center;
+      max-width: 480px;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeInUp 1s ease forwards;
+      transition: all 0.4s ease;
+    }
+
+    /* --- CARD HOVER --- */
+    .card:hover {
+      transform: scale(1.03);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    /* --- LOGO --- */
+    .logo {
+      width: 90px;
+      margin-bottom: 25px;
+      transition: transform 0.4s ease;
+    }
+
+    .card:hover .logo {
+      transform: rotate(-3deg) scale(1.05);
+    }
+
+    /* --- TEXT STYLES --- */
+    .subtitle {
+      color: #999;
+      letter-spacing: 2px;
+      font-size: 0.8rem;
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      font-weight: 400;
+      color: #555;
+      margin-bottom: 15px;
+    }
+
+    .highlight {
+      color: #9acd32;
+      font-weight: 500;
+    }
+
+    .lead {
+      color: #666;
+      font-size: 1rem;
+      margin-bottom: 10px;
+    }
+
+    p {
+      color: #888;
+      font-size: 0.9rem;
+      margin-bottom: 8px;
+    }
+
+    /* --- BUTTON --- */
+    .btnBlue1 {
+      background-color: #9acd32;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 8px 20px;
+      transition: 0.3s;
+      text-decoration: none;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    .btnBlue1:hover {
+      background-color: #85b82c;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      transform: translateY(-2px);
+      color: #fff;
+    }
+
+    /* --- ANIMATION --- */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <img src="http://ecbox.com.ar/signature/images/logo.png" alt="ECbox" class="logo">
+    <p class="subtitle">SOLUCIONES PERSONALIZADAS</p>
+    <h1><span class="highlight">EC</span>box</h1>
+
+    <hr class="my-4" style="opacity: 0.15;">
+
+    <h2 style="font-size:1.2rem; color:#555; margin-bottom:10px;">API Handling by ECbox</h2>
+    <p class="lead">This application is designed to provide users with an intuitive interface and seamless experience.</p>
+    <p>This is licensed software. Please do not copy or redistribute.</p>
+    <p>Developed by: ECBox</p>
+    <p>Mail: soporte@ecbox.com.ar</p>
+
+    <a href="https://ecbox.com.ar" target="_blank" class="btnBlue1 mt-3">
+      <i class="fas fa-home"></i> ecbox.com.ar
+    </a>
+  </div>
+</body>
+</html>

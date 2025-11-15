@@ -1,0 +1,64 @@
+<!-- Panel Derecho - Formulario -->
+<div class="container col-md-5 mt-2">
+    <div class="header-section">
+        <i class="fas fa-paper-plane"></i> DATOS DE ENVÍO
+    </div>
+
+    <div class="mt-3">
+        <div class="mb-3">
+            <label class="form-label">Compartir a:</label>
+            <select class="form-select form-select-sm" id="audienceType">
+                <option value="1">Adulto</option>
+                <option value="2">Estudiante</option>
+                <option value="3">Estudiante + Adulto (Ambos con Handing)</option>
+                <option value="4">Estudiante + Adulto (Uno con Handing)</option>
+            </select>
+            <small class="text-muted d-block mt-1">
+                <p>
+                    <strong>Adulto:</strong> Solo los adultos responsables/apoderados del estudiante (por defecto).<br>
+                    <strong>Estudiante:</strong> Solo el estudiante.<br>
+                    <strong>Estudiante + Adulto (Ambos con Handing):</strong> Tanto el estudiante como el adulto
+                    responsable/apoderado. Ambos deben tener cuenta en Handing; de lo contrario, se generará un error.
+                    <br>
+                    <strong>Estudiante + Adulto (Uno con Handing):</strong> El estudiante y/o el adulto
+                    responsable/apoderado.
+                    No es necesario que ambos tengan cuenta; basta con que al menos uno exista en Handing.
+                </p>
+            </small>
+        </div>
+
+        <div class="mb-2">
+            <label class="form-label">Asunto:</label>
+            <input type="text" class="form-control form-control-sm" id="subject" placeholder="Boletín 1er bimestre">
+        </div>
+
+        <div class="mb-2">
+            <label class="form-label">Datos de contacto:</label>
+            <textarea class="form-control form-control-sm" id="contactDescripcion" rows="2"
+                placeholder="Dirección de primaria"></textarea>
+            <small class="text-muted d-block mt-1">
+                <div>Puede incluir etiquetas HTML básicas para aplicar formato al contenido (por ejemplo:
+                    <code>&lt;p&gt;</code>, <code>&lt;br&gt;</code>, <code>&lt;strong&gt;</code>,
+                    <code>&lt;em&gt;</code>).
+                </div>
+            </small>
+        </div>
+
+        <div class="mt-3">
+            <small class="text-muted">
+                <strong id="selectedCount">0</strong> registro(s) seleccionado(s)
+            </small>
+        </div>
+
+        <div class="message-preview">
+            <h6>Cuadro de progreso</h6>
+            <div id="progressPreview">
+                <p class="text-muted mb-0">Selecciona registros y presiona "Enviar" para comenzar</p>
+            </div>
+        </div>
+    </div>
+
+    <button class="btn btn-success btn-send mt-3" onclick="iniciarEnvio()">
+        <i class="fas fa-paper-plane"></i> Enviar Seleccionados
+    </button>
+</div>

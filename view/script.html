@@ -1,0 +1,854 @@
+<script>
+  // ============= FUNCIONES DE VISTA =============
+  
+function mostrarTabla() {
+  var tbody = document.getElementById('tablaBody');
+  var noResults = document.getElementById('noResults');
+  tbody.innerHTML = '';
+
+  if (datosFiltrados.length === 0) {
+    noResults.style.display = 'block';
+    return;
+  }
+
+  noResults.style.display = 'none';
+
+  for (var i = 0; i < datosFiltrados.length; i++) {
+    var alumno = datosFiltrados[i];
+    var row = tbody.insertRow();
+    var uniqueId = alumno.dni;
+
+    if (seleccionados.has(uniqueId)) {
+      row.classList.add('selected');
+    }
+
+    // Checkbox
+    var cellCheck = row.insertCell();
+    cellCheck.className = 'checkbox-cell';
+    cellCheck.innerHTML = '<input type="checkbox" class="row-checkbox" data-id="' + uniqueId + '" ' +
+      (seleccionados.has(uniqueId) ? 'checked' : '') + ' onchange="toggleRow(this)">';
+
+    // Curso/Sección
+    row.insertCell().innerHTML = '<span class="badge bg-secondary">' + (alumno.seccion || 'N/A') + '</span>';
+
+    // Nombre completo
+    row.insertCell().innerHTML = '<strong>' + (alumno.apellido || '') + '</strong><br><small>' + (alumno.nombre || '') + '</small>';
+
+    // PDF (abrir)
+    var pdfCell = row.insertCell();
+    if (alumno.mergedDocUrl || alumno.linkToMergedDoc) {
+      var url = alumno.mergedDocUrl || alumno.linkToMergedDoc;
+      pdfCell.innerHTML = '<a href="' + url + '" target="_blank" class="btn btn-sm btn-outline-info btn-action"><i class="fas fa-file-pdf"></i> abrir</a>';
+    } else {
+      pdfCell.innerHTML = '<span class="text-muted">-</span>';
+    }
+
+    // Estado envío
+    var envioCell = row.insertCell();
+    var enviado = alumno.enviado || false;
+    envioCell.innerHTML = '<span class="status-badge ' + (enviado ? 'status-sent' : 'status-pending') + '" title="' + (enviado ? 'Enviado' : 'Pendiente') + '"></span>';
+
+    // Fecha de envío
+    var fechaCell = row.insertCell();
+    if (alumno.fechaEnvio) {
+      fechaCell.innerHTML = '<small>' + alumno.fechaEnvio + '</small>';
+    } else {
+      fechaCell.innerHTML = '<span class="text-muted">-</span>';
+    }
+  }
+}
+
+function mostrarTablaHistorial(datosHistorial) {
+  var tbody = document.getElementById('tablaHistorialBody');
+  var noResults = document.getElementById('noResultsHistorial');
+  tbody.innerHTML = '';
+
+  if (!datosHistorial || datosHistorial.length === 0) {
+    noResults.style.display = 'block';
+    return;
+  }
+
+  noResults.style.display = 'none';
+
+  for (var i = 0; i < datosHistorial.length; i++) {
+    var alumno = datosHistorial[i];
+    var row = tbody.insertRow();
+
+    // Ícono de check (sin checkbox)
+    var cellIcon = row.insertCell();
+    cellIcon.className = 'checkbox-cell';
+    cellIcon.innerHTML = '<i class="fas fa-check-circle text-success"></i>';
+
+    // Curso/Sección
+    row.insertCell().innerHTML = '<span class="badge bg-secondary">' + (alumno.seccion || 'N/A') + '</span>';
+
+    // Nombre completo
+    row.insertCell().innerHTML = '<strong>' + (alumno.apellido || '') + '</strong><br><small>' + (alumno.nombre || '') + '</small>';
+
+    // PDF (abrir)
+    var pdfCell = row.insertCell();
+    if (alumno.mergedDocUrl || alumno.linkToMergedDoc) {
+      var url = alumno.mergedDocUrl || alumno.linkToMergedDoc;
+      pdfCell.innerHTML = '<a href="' + url + '" target="_blank" class="btn btn-sm btn-outline-info btn-action"><i class="fas fa-file-pdf"></i> abrir</a>';
+    } else {
+      pdfCell.innerHTML = '<span class="text-muted">-</span>';
+    }
+
+    // Post ID con link
+    var postCell = row.insertCell();
+    if (alumno.postUrl) {
+      postCell.innerHTML = '<a href="' + alumno.postUrl + '" target="_blank" class="btn btn-sm btn-outline-primary btn-action"><i class="fas fa-external-link-alt"></i> ' + (alumno.postId || 'Ver') + '</a>';
+    } else if (alumno.postId) {
+      postCell.innerHTML = '<small>' + alumno.postId + '</small>';
+    } else {
+      postCell.innerHTML = '<span class="text-muted">-</span>';
+    }
+
+    // Fecha de envío
+    var fechaCell = row.insertCell();
+    if (alumno.fechaEnvio) {
+      fechaCell.innerHTML = '<small><i class="far fa-calendar-alt"></i> ' + alumno.fechaEnvio + '</small>';
+    } else {
+      fechaCell.innerHTML = '<span class="text-muted">-</span>';
+    }
+  }
+}
+
+  function marcarComoProcesando(dni) {
+    var tbody = document.getElementById('tablaBody');
+    var rows = tbody.getElementsByTagName('tr');
+
+    for (var i = 0; i < rows.length; i++) {
+      var checkbox = rows[i].querySelector('.row-checkbox');
+      if (checkbox && checkbox.getAttribute('data-id') === dni) {
+        rows[i].classList.add('processing');
+        var cells = rows[i].getElementsByTagName('td');
+        var envioCell = cells[4];
+        envioCell.innerHTML = '<span class="status-badge status-processing"></span> <span class="spinner-mini"></span>';
+        break;
+      }
+    }
+  }
+
+  function actualizarEstadoVisual(dni, success, fechaEnvio) {
+    var tbody = document.getElementById('tablaBody');
+    var rows = tbody.getElementsByTagName('tr');
+
+    for (var i = 0; i < rows.length; i++) {
+      var checkbox = rows[i].querySelector('.row-checkbox');
+      if (checkbox && checkbox.getAttribute('data-id') === dni) {
+        rows[i].classList.remove('processing');
+        var cells = rows[i].getElementsByTagName('td');
+        var envioCell = cells[4];
+        
+        if (success) {
+          envioCell.innerHTML = '<span class="status-badge status-sent"></span>';
+          rows[i].classList.add('table-success');
+          setTimeout(function () {
+            rows[i].classList.remove('table-success');
+          }, 2000);
+        } else {
+          envioCell.innerHTML = '<span class="status-badge status-pending"></span>';
+          rows[i].classList.add('table-danger');
+          setTimeout(function () {
+            rows[i].classList.remove('table-danger');
+          }, 2000);
+        }
+
+        if (success && fechaEnvio) {
+          var fechaCell = cells[5];
+          fechaCell.innerHTML = '<small>' + fechaEnvio + '</small>';
+        }
+        break;
+      }
+    }
+  }
+
+  function actualizarEstadisticas() {
+    var totalAlumnos = datosFiltrados.length;
+    var enviados = 0;
+    for (var i = 0; i < datosFiltrados.length; i++) {
+      if (datosFiltrados[i].enviado) {
+        enviados++;
+      }
+    }
+    var sinEnviar = totalAlumnos - enviados;
+
+    document.getElementById('totalAlumnos').textContent = totalAlumnos;
+    document.getElementById('totalEnviados').textContent = enviados;
+    document.getElementById('sinEnviar').textContent = sinEnviar;
+  }
+
+  // ============= FUNCIONES DE INTERACCIÓN =============
+
+  function toggleRow(checkbox) {
+    var id = checkbox.getAttribute('data-id');
+    var row = checkbox.closest('tr');
+
+    if (checkbox.checked) {
+      seleccionados.add(id);
+      row.classList.add('selected');
+    } else {
+      seleccionados.delete(id);
+      row.classList.remove('selected');
+    }
+
+    actualizarContadorSeleccionados();
+  }
+
+  function toggleSelectAll() {
+    var selectAll = document.getElementById('selectAll');
+    var checkboxes = document.querySelectorAll('.row-checkbox');
+    seleccionados.clear();
+
+    for (var i = 0; i < checkboxes.length; i++) {
+      var checkbox = checkboxes[i];
+      checkbox.checked = selectAll.checked;
+      var row = checkbox.closest('tr');
+
+      if (selectAll.checked) {
+        seleccionados.add(checkbox.getAttribute('data-id'));
+        row.classList.add('selected');
+      } else {
+        row.classList.remove('selected');
+      }
+    }
+
+    actualizarContadorSeleccionados();
+  }
+
+  function actualizarContadorSeleccionados() {
+    document.getElementById('selectedCount').textContent = seleccionados.size;
+  }
+
+  function llenarCursos() {
+    var cursosSet = new Set();
+    for (var i = 0; i < datosOriginales.length; i++) {
+      if (datosOriginales[i].seccion) {
+        cursosSet.add(datosOriginales[i].seccion);
+      }
+    }
+
+    var cursos = Array.from(cursosSet).sort();
+    var select = document.getElementById('filtroCurso');
+    
+    select.innerHTML = '<option value="">Seleccionar curso</option>';
+
+    for (var i = 0; i < cursos.length; i++) {
+      var option = document.createElement('option');
+      option.value = cursos[i];
+      option.textContent = cursos[i];
+      select.appendChild(option);
+    }
+  }
+
+  function aplicarFiltros() {
+    var buscar = document.getElementById('buscarNombre').value.toLowerCase().trim();
+    var curso = document.getElementById('filtroCurso').value;
+
+    datosFiltrados = [];
+    for (var i = 0; i < datosOriginales.length; i++) {
+      var alumno = datosOriginales[i];
+      var coincideNombre = !buscar ||
+        (alumno.nombre && alumno.nombre.toLowerCase().indexOf(buscar) !== -1) ||
+        (alumno.apellido && alumno.apellido.toLowerCase().indexOf(buscar) !== -1);
+      var coincideCurso = !curso || alumno.seccion === curso;
+      
+      if (coincideNombre && coincideCurso) {
+        datosFiltrados.push(alumno);
+      }
+    }
+
+    mostrarTabla();
+    actualizarEstadisticas();
+  }
+
+  function limpiarFiltros() {
+    document.getElementById('buscarNombre').value = '';
+    document.getElementById('filtroCurso').value = '';
+    datosFiltrados = datosOriginales.slice();
+    mostrarTabla();
+    actualizarEstadisticas();
+  }
+
+  function mostrarError(mensaje) {
+    document.getElementById('errorMessage').textContent = mensaje;
+    var errorModal = new bootstrap.Modal(document.getElementById('errorData'));
+    errorModal.show();
+  }
+
+  // ============= FUNCIONES DE HISTORIAL =============
+
+function showHistory() {
+
+  var btnHistorial = document.querySelector('.btnPurple1');
+  var textoOriginal = btnHistorial.innerHTML;
+  btnHistorial.disabled = true;
+
+  btnHistorial.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cargando...';
+  setTimeout(function() {
+      //Esto va dentro del llamado a google
+   modoHistorial = true;
+        
+        // Ocultar contenedor de Data
+        document.getElementById('contenedorData').style.display = 'none';
+        
+        // Mostrar contenedor de Historial
+        document.getElementById('contenedorHistorial').style.display = 'block';
+        
+        // Llenar tabla de historial
+        mostrarTablaHistorial(historyData);
+        
+        // Cambiar botón a "Volver"
+        btnHistorial.innerHTML = '<i class="fas fa-arrow-left"></i> Volver a Datos';
+        btnHistorial.onclick = volverAData;
+        
+        // Deshabilitar botón de envío
+        var btnSend = document.querySelector('.btn-send');
+        btnSend.disabled = true;
+        btnSend.innerHTML = '<i class="fas fa-info-circle"></i> Modo Historial (Solo lectura)';
+        
+
+        btnHistorial.disabled = false;
+  }, 3000);
+
+}
+
+function volverAData() {
+  modoHistorial = false;
+  
+  // Mostrar contenedor de Data
+  document.getElementById('contenedorData').style.display = 'block';
+  
+  // Ocultar contenedor de Historial
+  document.getElementById('contenedorHistorial').style.display = 'none';
+  
+  // Restaurar botón de historial
+  var btnHistorial = document.querySelector('.btnPurple1');
+  btnHistorial.innerHTML = '<i class="fa-solid fa-clock-rotate-left"></i> Ver Historial';
+  btnHistorial.onclick = showHistory;
+  
+  // Habilitar botón de envío
+  var btnSend = document.querySelector('.btn-send');
+  btnSend.disabled = false;
+  btnSend.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar Seleccionados';
+}
+
+  // ============= FUNCIONES DE ENVÍO =============
+
+  function iniciarEnvio() {
+    var validacion = validarDatosPreEnvio();
+
+    if (!validacion.valid) {
+      var mensaje = mostrarConfirmacionEnvio(validacion);
+      var modalHtml =
+        '<div class="modal fade" id="validacionModal" tabindex="-1">' +
+        '  <div class="modal-dialog">' +
+        '    <div class="modal-content">' +
+        '      <div class="modal-header bg-danger text-white">' +
+        '        <h5 class="modal-title"><i class="fas fa-exclamation-triangle"></i> No se puede continuar</h5>' +
+        '        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>' +
+        '      </div>' +
+        '      <div class="modal-body">' + mensaje + '</div>' +
+        '      <div class="modal-footer">' +
+        '        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>' +
+        '      </div>' +
+        '    </div>' +
+        '  </div>' +
+        '</div>';
+
+      if (!document.getElementById('validacionModal')) {
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+      }
+
+      var validacionModalEl = new bootstrap.Modal(document.getElementById('validacionModal'));
+      validacionModalEl.show();
+
+      document.getElementById('validacionModal').addEventListener('hidden.bs.modal', function () {
+        this.remove();
+      });
+
+      return;
+    }
+
+    if (validacion.advertencias.length > 0) {
+      var mensaje = mostrarConfirmacionEnvio(validacion);
+      var modalHtml =
+        '<div class="modal fade" id="confirmacionModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">' +
+        '  <div class="modal-dialog">' +
+        '    <div class="modal-content">' +
+        '      <div class="modal-header bg-warning">' +
+        '        <h5 class="modal-title"><i class="fas fa-exclamation-triangle"></i> Confirmar envío</h5>' +
+        '        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>' +
+        '      </div>' +
+        '      <div class="modal-body">' + mensaje + '</div>' +
+        '      <div class="modal-footer">' +
+        '        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>' +
+        '        <button type="button" class="btn btn-success" onclick="continuarEnvio()">Sí, enviar</button>' +
+        '      </div>' +
+        '    </div>' +
+        '  </div>' +
+        '</div>';
+
+      if (!document.getElementById('confirmacionModal')) {
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+      }
+
+      var confirmacionModalEl = new bootstrap.Modal(document.getElementById('confirmacionModal'));
+      confirmacionModalEl.show();
+
+      document.getElementById('confirmacionModal').addEventListener('hidden.bs.modal', function () {
+        this.remove();
+      });
+
+      return;
+    }
+
+    continuarEnvio();
+  }
+
+  function validarDatosPreEnvio() {
+    var errores = [];
+    var advertencias = [];
+    var alumnosSeleccionados = [];
+
+    for (var i = 0; i < datosFiltrados.length; i++) {
+      if (seleccionados.has(datosFiltrados[i].dni)) {
+        alumnosSeleccionados.push(datosFiltrados[i]);
+      }
+    }
+
+    if (alumnosSeleccionados.length === 0) {
+      errores.push('No hay registros seleccionados');
+      return { valid: false, errores: errores, advertencias: advertencias };
+    }
+
+    var subject = document.getElementById('subject').value.trim();
+    if (!subject) {
+      errores.push('El campo "Asunto" es obligatorio');
+    }
+
+    var sinPDF = 0;
+    var sinDNI = 0;
+
+    for (var i = 0; i < alumnosSeleccionados.length; i++) {
+      var alumno = alumnosSeleccionados[i];
+      if (!alumno.dni || alumno.dni === '') {
+        sinDNI++;
+      }
+      if (!alumno.mergedDocUrl && !alumno.linkToMergedDoc) {
+        sinPDF++;
+      }
+    }
+
+    if (sinDNI > 0) {
+      errores.push(sinDNI + ' alumno(s) sin DNI válido');
+    }
+
+    if (sinPDF > 0) {
+      advertencias.push(sinPDF + ' alumno(s) sin PDF asignado (se saltarán)');
+    }
+
+    if (alumnosSeleccionados.length > 50) {
+      advertencias.push('Vas a enviar ' + alumnosSeleccionados.length + ' boletines. Esto puede tardar varios minutos.');
+    }
+
+    return {
+      valid: errores.length === 0,
+      errores: errores,
+      advertencias: advertencias
+    };
+  }
+
+  function mostrarConfirmacionEnvio(validacion) {
+    var mensaje = '<div class="mb-3">';
+
+    if (validacion.errores.length > 0) {
+      mensaje += '<div class="alert alert-danger" role="alert">';
+      mensaje += '<strong><i class="fas fa-exclamation-circle"></i> Errores:</strong><ul class="mb-0 mt-2">';
+      for (var i = 0; i < validacion.errores.length; i++) {
+        mensaje += '<li>' + validacion.errores[i] + '</li>';
+      }
+      mensaje += '</ul></div>';
+    }
+
+    if (validacion.advertencias.length > 0) {
+      mensaje += '<div class="alert alert-warning" role="alert">';
+      mensaje += '<strong><i class="fas fa-exclamation-triangle"></i> Advertencias:</strong><ul class="mb-0 mt-2">';
+      for (var i = 0; i < validacion.advertencias.length; i++) {
+        mensaje += '<li>' + validacion.advertencias[i] + '</li>';
+      }
+      mensaje += '</ul></div>';
+    }
+
+    if (validacion.valid) {
+      var alumnosSeleccionados = [];
+      for (var i = 0; i < datosFiltrados.length; i++) {
+        if (seleccionados.has(datosFiltrados[i].dni)) {
+          alumnosSeleccionados.push(datosFiltrados[i]);
+        }
+      }
+
+      mensaje += '<div class="alert alert-info" role="alert">';
+      mensaje += '<strong><i class="fas fa-info-circle"></i> Resumen:</strong>';
+      mensaje += '<ul class="mb-0 mt-2">';
+      mensaje += '<li>Total a enviar: <strong>' + alumnosSeleccionados.length + '</strong> boletines</li>';
+      mensaje += '<li>Asunto: <strong>' + document.getElementById('subject').value + '</strong></li>';
+      mensaje += '<li>Tiempo estimado: <strong>~' + Math.ceil(alumnosSeleccionados.length * 0.5 / 60) + ' minutos</strong></li>';
+      mensaje += '</ul></div>';
+      mensaje += '<p class="text-center mb-0"><strong>¿Deseas continuar con el envío?</strong></p>';
+    }
+
+    mensaje += '</div>';
+    return mensaje;
+  }
+
+  function continuarEnvio() {
+    var confirmacionModal = bootstrap.Modal.getInstance(document.getElementById('confirmacionModal'));
+    if (confirmacionModal) {
+      confirmacionModal.hide();
+    }
+
+    var audienceType = document.getElementById('audienceType').value;
+    var subject = document.getElementById('subject').value.trim();
+    var contactDescripcion = document.getElementById('contactDescripcion').value.trim();
+
+    var alumnosSeleccionados = [];
+    for (var i = 0; i < datosFiltrados.length; i++) {
+      if (seleccionados.has(datosFiltrados[i].dni)) {
+        alumnosSeleccionados.push(datosFiltrados[i]);
+      }
+    }
+
+    var datosEnvio = [];
+    for (var i = 0; i < alumnosSeleccionados.length; i++) {
+      var alumno = alumnosSeleccionados[i];
+      datosEnvio.push({
+        dni: alumno.dni,
+        nombre: alumno.nombre,
+        apellido: alumno.apellido,
+        seccion: alumno.seccion,
+        linkPDF: alumno.mergedDocUrl || alumno.linkToMergedDoc || ''
+      });
+    }
+
+    var progressModal = new bootstrap.Modal(document.getElementById('progressModal'));
+    progressModal.show();
+
+    var progressContainer = document.getElementById('progressContainer');
+    progressContainer.innerHTML = '';
+
+    var btnCerrar = document.getElementById('btnCerrarProgreso');
+    btnCerrar.disabled = true;
+
+    var spinnerEnvio = document.getElementById('spinnerEnvio');
+    spinnerEnvio.style.display = 'inline-block';
+
+    document.getElementById('progressBar').style.width = '0%';
+    document.getElementById('progressText').textContent = '0 de ' + datosEnvio.length;
+
+    google.script.run
+      .withSuccessHandler(function (resultado) {
+        spinnerEnvio.style.display = 'none';
+
+        var exitosos = 0;
+        var errores = 0;
+
+        for (var index = 0; index < resultado.length; index++) {
+          var item = resultado[index];
+          var alumno = alumnosSeleccionados[index];
+
+          var progressItem = document.createElement('div');
+
+          if (item.success) {
+            progressItem.className = 'progress-item success';
+            progressItem.innerHTML =
+              '<span><i class="fas fa-check-circle text-success"></i> ' +
+              alumno.nombre + ' ' + alumno.apellido + '</span>' +
+              '<span class="text-success">Enviado</span>';
+
+            var fechaEnvio = new Date().toLocaleString('es-AR', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            });
+
+            alumno.enviado = true;
+            alumno.fechaEnvio = fechaEnvio;
+            alumno.postId = item.postId;
+
+            for (var j = 0; j < datosOriginales.length; j++) {
+              if (datosOriginales[j].dni === alumno.dni) {
+                datosOriginales[j].enviado = true;
+                datosOriginales[j].fechaEnvio = fechaEnvio;
+                datosOriginales[j].postId = item.postId;
+                break;
+              }
+            }
+
+            actualizarEstadoVisual(alumno.dni, true, fechaEnvio);
+            exitosos++;
+          } else {
+            progressItem.className = 'progress-item error';
+            progressItem.innerHTML =
+              '<span><i class="fas fa-times-circle text-danger"></i> ' +
+              alumno.nombre + ' ' + alumno.apellido + '</span>' +
+              '<span class="text-danger">' + (item.error || 'Error') + '</span>';
+
+            actualizarEstadoVisual(alumno.dni, false);
+            errores++;
+          }
+
+          progressContainer.appendChild(progressItem);
+
+          var progreso = Math.round(((index + 1) / resultado.length) * 100);
+          document.getElementById('progressBar').style.width = progreso + '%';
+          document.getElementById('progressText').textContent = (index + 1) + ' de ' + resultado.length;
+        }
+
+        progressContainer.scrollTop = progressContainer.scrollHeight;
+
+        btnCerrar.disabled = false;
+        btnCerrar.onclick = function () {
+          progressModal.hide();
+          mostrarResumenFinal(exitosos, errores, datosEnvio.length);
+        };
+
+        actualizarEstadisticas();
+        seleccionados.clear();
+        document.getElementById('selectAll').checked = false;
+        actualizarContadorSeleccionados();
+      })
+      .withFailureHandler(function (error) {
+        spinnerEnvio.style.display = 'none';
+
+        progressContainer.innerHTML =
+          '<div class="progress-item error">' +
+          '<span><i class="fas fa-exclamation-triangle text-danger"></i> Error general</span>' +
+          '<span class="text-danger">' + error.message + '</span>' +
+          '</div>';
+
+        btnCerrar.disabled = false;
+        btnCerrar.onclick = function () {
+          progressModal.hide();
+          mostrarError('Error al procesar el envío: ' + error.message);
+        };
+      })
+      .run(datosEnvio, audienceType, subject, contactDescripcion);
+  }
+
+  function mostrarResumenFinal(exitosos, errores, total) {
+    document.getElementById('exitososCount').textContent = exitosos;
+    document.getElementById('erroresCount').textContent = errores;
+    document.getElementById('totalCount').textContent = total;
+
+    var completedModal = new bootstrap.Modal(document.getElementById('completedModal'));
+    completedModal.show();
+  }
+
+  // ============= FUNCIONES DE LIMPIEZA =============
+
+  function limpiarEnviados() {
+    if (modoHistorial) {
+      mostrarError('No puedes limpiar registros desde el modo Historial. Vuelve a la vista de Datos primero.');
+      return;
+    }
+    
+    var hayEnviados = false;
+    for (var i = 0; i < datosOriginales.length; i++) {
+      if (datosOriginales[i].enviado === true) {
+        hayEnviados = true;
+        break;
+      }
+    }
+    
+    if (!hayEnviados) {
+      mostrarError('No hay registros marcados como enviados para limpiar.');
+      return;
+    }
+    
+    var confirmModal = new bootstrap.Modal(document.getElementById('confirmLimpiarModal'));
+    confirmModal.show();
+  }
+
+function confirmarLimpiarEnviados() {
+  var confirmModal = bootstrap.Modal.getInstance(document.getElementById('confirmLimpiarModal'));
+  var btnConfirmar = document.querySelector('#confirmLimpiarModal .btn-warning');
+  var btnCancelar = document.querySelector('#confirmLimpiarModal .btn-secondary');
+  
+  btnConfirmar.disabled = true;
+  btnCancelar.disabled = true;
+  btnConfirmar.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Limpiando...';
+  
+  google.script.run
+    .withSuccessHandler(function (resultado) {
+      if (resultado.success) {
+        confirmModal.hide();
+
+        var textoReg = document.querySelector('#resultadoReg');
+        textoReg.innerHTML = 'Se limpiaron ' + resultado.registros + ' registros.';
+        var textoHis = document.querySelector('#resultadoHis');
+        textoHis.innerHTML = 'Se movieron ' + resultado.historial + ' registros al historial.';
+
+
+        var finishModal = new bootstrap.Modal(document.getElementById('finalizarLimpiarModal'));
+        finishModal.show();
+
+
+
+        // Si estamos en modo historial, volver a Data
+        if (modoHistorial) {
+          volverAData();
+        }
+        
+        // Recargar datos de la hoja Data
+        google.script.run
+          .withSuccessHandler(function(data) {
+            if (data) {
+              datosOriginales = data || [];
+              datosFiltrados = datosOriginales.slice();
+              
+              seleccionados.clear();
+              var selectAllCheckbox = document.getElementById('selectAll');
+              if (selectAllCheckbox) {
+                selectAllCheckbox.checked = false;
+              }
+              actualizarContadorSeleccionados();
+              
+              llenarCursos();
+              mostrarTabla();
+              actualizarEstadisticas();
+            }
+          })
+          .withFailureHandler(function(error) {
+            mostrarError('Error al recargar datos: ' + error);
+          })
+          .reloadData();
+        
+      } else {
+        mostrarError('Error al limpiar enviados: ' + resultado.error);
+        confirmModal.hide();
+      }
+      
+      btnConfirmar.disabled = false;
+      btnCancelar.disabled = false;
+      btnConfirmar.innerHTML = '<i class="fas fa-broom"></i> Sí, limpiar';
+    })
+    .withFailureHandler(function (error) {
+      mostrarError('Error en servidor: ' + error.message);
+      confirmModal.hide();
+      
+      btnConfirmar.disabled = false;
+      btnCancelar.disabled = false;
+      btnConfirmar.innerHTML = '<i class="fas fa-broom"></i> Sí, limpiar';
+    })
+    .cleanRegister();
+}
+
+  // ============= FUNCIONES DE CARGA DE DATOS =============
+
+  function cargarDatosHandler() {
+    var link = document.getElementById('link').value.trim();
+    var sheetName = document.getElementById('sheet').value.trim();
+    var boton = document.getElementById('cargar');
+
+    if (!link || !sheetName) {
+      mostrarError('Por favor completa ambos campos: ID/URL del sheet y nombre de la hoja');
+      return;
+    }
+
+    boton.disabled = true;
+    boton.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Cargando...';
+
+    google.script.run
+      .withSuccessHandler(function (resultado) {
+        boton.disabled = false;
+        boton.innerHTML = 'Cargar Datos';
+
+        if (resultado.success) {
+          var uploadModal = bootstrap.Modal.getInstance(document.getElementById('uploadData'));
+          if (uploadModal) {
+            uploadModal.hide();
+          }
+
+          datosOriginales = resultado.datos || [];
+          datosFiltrados = datosOriginales.slice();
+
+          llenarCursos();
+          mostrarTabla();
+          actualizarEstadisticas();
+
+          document.getElementById('link').value = '';
+          document.getElementById('sheet').value = '';
+        } else {
+          mostrarError(resultado.message || 'Error al cargar los datos');
+        }
+      })
+      .withFailureHandler(function (error) {
+        boton.disabled = false;
+        boton.innerHTML = 'Cargar Datos';
+
+        var mensajeError = 'Error al cargar los datos';
+
+        if (error.message) {
+          if (error.message.indexOf('No se encontró la hoja') !== -1) {
+            mensajeError = 'No se encontró la hoja "' + sheetName + '". Verifica que el nombre esté escrito correctamente (respetando mayúsculas/minúsculas).';
+          } else if (error.message.indexOf('permiso') !== -1 || error.message.indexOf('acceso') !== -1) {
+            mensajeError = 'No tienes permiso para acceder a este spreadsheet. Verifica que el documento sea público o que tengas acceso.';
+          } else if (error.message.indexOf('No se pudo extraer el ID') !== -1) {
+            mensajeError = 'No se pudo extraer el ID del spreadsheet. Verifica que el link o ID sea correcto.';
+          } else if (error.message.indexOf('Faltan los siguientes encabezados') !== -1) {
+            mensajeError = error.message;
+          } else {
+            mensajeError = 'Error al cargar los datos: ' + error.message;
+          }
+        }
+
+        mostrarError(mensajeError);
+      })
+      .modalData(link, sheetName);
+  }
+
+  // ============= EVENT LISTENERS =============
+
+  function setupEventListeners() {
+    document.getElementById('buscarNombre').addEventListener('input', aplicarFiltros);
+    document.getElementById('filtroCurso').addEventListener('change', aplicarFiltros);
+    
+    document.getElementById('cargar').addEventListener('click', cargarDatosHandler);
+    
+    document.getElementById('sheet').addEventListener('keypress', function (e) {
+      if (e.key === 'Enter') {
+        document.getElementById('cargar').click();
+      }
+    });
+
+    document.getElementById('link').addEventListener('keypress', function (e) {
+      if (e.key === 'Enter') {
+        document.getElementById('sheet').focus();
+      }
+    });
+
+    document.getElementById('uploadData').addEventListener('show.bs.modal', function () {
+      document.getElementById('errorMessage').textContent = 'Ingrese link o ID del sheet y el nombre de la hoja para continuar';
+    });
+  }
+
+  // ============= INICIALIZACIÓN =============
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+      setupEventListeners();
+      llenarCursos();
+      mostrarTabla();
+      actualizarEstadisticas();
+    });
+  } else {
+    setupEventListeners();
+    llenarCursos();
+    mostrarTabla();
+    actualizarEstadisticas();
+  }
+</script>

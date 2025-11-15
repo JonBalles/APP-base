@@ -1,0 +1,275 @@
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<style>
+    .btnBlue1 {
+        background-color: #1d4ed8;
+        color: white;
+    }
+
+    .btnBlue1:hover {
+        background-color: #1677ff;
+    }
+
+    .btnPurple1 {
+        background-color: #7c3aed;
+        color: white;
+    }
+
+    .btnPurple1:hover, .btnPurple1:disabled {
+        background-color: #8b5cf6;
+    }
+
+
+    .btnRed1 {
+        background-color: #f97316;
+        color: white;
+    }
+
+    .btnRed1:hover {
+        background-color: #ef4444;
+    }
+
+    body {
+        background-color: #f5f5f5;
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    .table tbody tr.processing {
+        background-color: #fff3cd;
+        animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    .status-badge.status-processing {
+        background-color: #ffc107;
+        animation: pulse-badge 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+
+        0%,
+        100% {
+            background-color: #fff3cd;
+        }
+
+        50% {
+            background-color: #ffe69c;
+        }
+    }
+
+    @keyframes pulse-badge {
+
+        0%,
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        50% {
+            transform: scale(1.1);
+            opacity: 0.8;
+        }
+    }
+
+    .spinner-mini {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border: 2px solid #f3f3f3;
+        border-top: 2px solid #ffc107;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    .progress-item {
+        padding: 8px 12px;
+        margin-bottom: 8px;
+        border-radius: 4px;
+        background-color: #f8f9fa;
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .progress-item.success {
+        background-color: #d4edda;
+        border-left: 4px solid #28a745;
+    }
+
+    .progress-item.error {
+        background-color: #f8d7da;
+        border-left: 4px solid #dc3545;
+    }
+
+    .progress-item.processing {
+        background-color: #fff3cd;
+        border-left: 4px solid #ffc107;
+    }
+
+    #progressContainer {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .spinner-border-sm {
+        width: 1rem;
+        height: 1rem;
+        border-width: 0.2em;
+    }
+
+    .header-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 8px;
+    }
+
+    .header-section h4 {
+        margin: 0;
+        font-weight: 600;
+    }
+
+    .stats-row {
+        display: flex;
+        gap: 15px;
+        margin-top: 15px;
+    }
+
+    .stat-card {
+        flex: 1;
+        background: rgba(255, 255, 255, 0.2);
+        padding: 15px;
+        border-radius: 8px;
+        text-align: center;
+    }
+
+    .stat-label {
+        font-size: 12px;
+        opacity: 0.9;
+        margin-bottom: 5px;
+    }
+
+    .stat-number {
+        font-size: 28px;
+        font-weight: bold;
+    }
+
+    .filter-section {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+
+    .table-container {
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .table {
+        margin: 0;
+    }
+
+    .table thead th {
+        background-color: #4a5568;
+        color: white;
+        font-weight: 500;
+        padding: 12px;
+        border: none;
+        font-size: 13px;
+        white-space: nowrap;
+    }
+
+    .table tbody td {
+        padding: 10px 12px;
+        vertical-align: middle;
+        font-size: 13px;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .table tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+
+    .table tbody tr.selected {
+        background-color: #e3f2fd;
+    }
+
+    .btn-action {
+        padding: 4px 10px;
+        font-size: 11px;
+        margin: 0 2px;
+    }
+
+    .status-badge {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+
+    .status-sent {
+        background-color: #28a745;
+    }
+
+    .status-pending {
+        background-color: #dc3545;
+    }
+
+    .message-preview {
+        background-color: #e7f3ff;
+        padding: 15px;
+        border-radius: 8px;
+        margin-top: 20px;
+        border-left: 4px solid #007bff;
+    }
+
+    .message-preview h6 {
+        font-weight: 600;
+        margin-bottom: 10px;
+        color: #007bff;
+    }
+
+    .btn-send {
+        width: 100%;
+        padding: 12px;
+        font-size: 15px;
+        font-weight: 600;
+        margin-bottom: 10px;
+    }
+
+    .checkbox-cell {
+        width: 40px;
+        text-align: center;
+    }
+
+    .form-control,
+    .form-select {
+        font-size: 13px;
+    }
+
+    .table-responsive {
+        max-height: calc(100vh - 300px);
+        overflow-y: auto;
+    }
+
+    .no-results {
+        text-align: center;
+        padding: 40px;
+        color: #6c757d;
+    }
+</style>

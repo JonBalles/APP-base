@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <base target="_top">
+  <?!= include('view/style'); ?>
+</head>
+<body>
+  <main class="container-fluid row">
+    <?!= include('view/table'); ?>
+    <?!= include('view/form'); ?>
+  </main>
+  <?!= include('view/modal'); ?>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+<script>
+  // ============= VARIABLES GLOBALES =============
+  var datosOriginales = [];
+  var datosFiltrados = [];
+  var seleccionados = new Set();
+  var modoHistorial = false; 
+
+    try {
+    datosOriginales = <?!= datosJSON ?>;
+    historyData = <?!= historyDataJSON ?>;
+    datosFiltrados = datosOriginales.slice();
+  } catch (e) {
+    console.error("Error al cargar datos:", e);
+  }
+</script>
+<?!= include('view/script'); ?>
+</body>
+
+</html>
