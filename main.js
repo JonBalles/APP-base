@@ -40,8 +40,9 @@ function getData(spreadsheetId, sheetName) {
 
   try{
     const datos = obtenerDatos(spreadsheetId, sheetName);
+    const historial = obtenerHistorial(spreadsheetId, "Historial");
     copyData(datos);
-    generarVista(datos, "main");
+    generarVista(datos, historial, "main");
   } catch(error){
     Logger.log("Error en generarVista: " + error.toString());
     throw new Error('Error al generar la vista: ' + error.toString());
@@ -216,15 +217,17 @@ function run(alumnos, audienceType, subject, contactDescripcion) {
         });
         
       } else {
+        const errMsg = (response && response.error_message) ? response.error_message : 'No se recibió respuesta válida de la API';
+
         resultados.push({
           success: false,
           dni: alumno.dni,
-          error: 'No se recibió respuesta válida de la API'
+          error: errMsg
         });
               clientAPILog(null, 'EnvioBoletinesPDF', {
         uid: alumno.dni,
         subject: subject,
-        error: error.message
+        error: errMsg
       });
       }
       

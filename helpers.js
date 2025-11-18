@@ -97,7 +97,6 @@ function obtenerDatos(sheetId, sheetName) {
   }
 }
 
-
 // Obtener datos de hoja de Sheet y pasar a JSON
 function obtenerHistorial(sheetId, sheetName) {
   if (!sheetId || !sheetName) {
@@ -167,6 +166,7 @@ function obtenerHistorial(sheetId, sheetName) {
     throw error;
   }
 }
+
 // Copia los datos a la hoja en donde se ejecuta
 function copyData(datos) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();

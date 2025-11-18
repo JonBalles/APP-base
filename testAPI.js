@@ -29,10 +29,10 @@ function testEnviarBoletinConLink() {
     return;
   }
 
-  const studentId = ejemploLink.uid;
-  const reportLink = ejemploLink.linkUrl;
-  const linkTitle = ejemploLink.linkTitle;
-  const subject = ejemploLink.subject;
+  const studentId = ejemploLab.uid;
+  const reportLink = ejemploLab.linkUrl;
+  const linkTitle = ejemploLab.linkTitle;
+  const subject = ejemploLab.subject;
   const audienceType = 1;
   const resultado = enviarBoletinConLink(token, studentId, reportLink, linkTitle, subject, audienceType);
   
@@ -53,11 +53,11 @@ function testEnviarBoletinPDF() {
     return;
   }
 
-  const studentId = ejemploPDF.uid;
-  const reportFileId = ejemploPDF.fileID;
-  const subject = ejemploPDF.subject;
-  const audienceType = ejemploPDF.audienceType;
-  const contactDescription = ejemploPDF.contactDescription;
+  const studentId = ejemploLab.uid;
+  const reportFileId = ejemploLab.fileID;
+  const subject = ejemploLab.subject;
+  const audienceType = ejemploLab.audienceType;
+  const contactDescription = ejemploLab.contactDescription;
   const resultado =  enviarBoletinConPDF(token, studentId, reportFileId, subject, audienceType, contactDescription)
   
   if (resultado) {
@@ -66,16 +66,3 @@ function testEnviarBoletinPDF() {
     Logger.log('Error al enviar el boletín');
   }
 }
-
-/**
- * return:
- * Registro de ejecución
-    7:33:40 p.m.	Aviso	Se inició la ejecución
-    7:33:43 p.m.	Información	Handing - authorization token response code 201
-    7:33:43 p.m.	Información	Handing - enviando boletín a 123.456.789
-    7:33:43 p.m.	Información	Handing - código de respuesta: 201
-    7:33:43 p.m.	Información	Boletín enviado exitosamente. Post ID: 14675
-    7:33:44 p.m.	Información	1 registro(s) agregado(s) exitosamente al log
-    7:33:44 p.m.	Información	Boletín enviado con éxito. Post ID: 14675
-    7:33:44 p.m.	Aviso	Se completó la ejecución
- */
