@@ -26,7 +26,7 @@
     <button type="button" class="btn btnBlue1 me-2" data-bs-toggle="modal" data-bs-target="#uploadData">
       <i class="fa-solid fa-file-import"></i> Cargar datos
     </button>
-    <button type="button" class="btn btnPurple1 me-2" onclick="showHistory()">
+    <button type="button" class="btn btnPurple1 me-2" id="showHistory" onclick="showHistory()">
   <i class="fa-solid fa-clock-rotate-left"></i> Ver Historial
 </button>
     <button type="button" class="btn btnRed1" onclick="limpiarEnviados()">
@@ -34,6 +34,9 @@
     </button>
   </div>
 
+  <div>
+    <h3 id="tittleTable">Datos</h3>
+  </div>
   <div class="filter-section">
     <div class="row g-2">
       <div class="col-md-4">
@@ -60,7 +63,7 @@
   <!-- TABLA DATA (visible por defecto) -->
   <div id="contenedorData" class="table-container">
     <div class="justify-content-center align-items-center d-flex">
-      <h3 class="display-4">Datos</h3>
+      
     </div>
     <div class="table-responsive">
       <table class="table table-hover">

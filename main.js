@@ -125,10 +125,9 @@ function run(alumnos, audienceType, subject, contactDescripcion) {
   if (!token) {
     throw new Error('No se pudo obtener el token de autorización');
   }
-  
+
   // Procesar cada alumno
-  alumnos.forEach(function(alumno, index) {
-    const logPrefix = '[' + (index + 1) + '/' + alumnos.length + ']';
+  alumnos.forEach(function(alumno) {
     
     try {
       // Validar que tenga PDF
@@ -143,7 +142,7 @@ function run(alumnos, audienceType, subject, contactDescripcion) {
       
       // Extraer ID del archivo de Drive
       const fileId = extraerDriveFileId(alumno.linkPDF);
-      
+
       if (!fileId) {
         resultados.push({
           success: false,
@@ -155,7 +154,6 @@ function run(alumnos, audienceType, subject, contactDescripcion) {
       
       // Validar que el archivo exista y sea accesible
       const validacion = validarDriveFileId(fileId);
-      
       if (!validacion.valid) {
         resultados.push({
           success: false,
@@ -210,7 +208,7 @@ function run(alumnos, audienceType, subject, contactDescripcion) {
           fechaEnvio: fechaEnvio,
           postId: response.post_id
         });
-          
+          Logger.log("Creando LOG en API_Log")
         clientAPILog(response, 'EnvioBoletinesPDF', {
           uid: alumno.dni,
           subject: subject,

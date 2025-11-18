@@ -4,6 +4,8 @@
 function mostrarTabla() {
   var tbody = document.getElementById('tablaBody');
   var noResults = document.getElementById('noResults');
+  var tittle = document.getElementById('tittleTable');
+  tittle.innerHTML = 'Datos';
   tbody.innerHTML = '';
 
   if (datosFiltrados.length === 0) {
@@ -61,6 +63,8 @@ function mostrarTabla() {
 function mostrarTablaHistorial(datosHistorial) {
   var tbody = document.getElementById('tablaHistorialBody');
   var noResults = document.getElementById('noResultsHistorial');
+  var tittle = document.getElementById('tittleTable');
+  tittle.innerHTML = 'Historial';
   tbody.innerHTML = '';
 
   if (!datosHistorial || datosHistorial.length === 0) {
@@ -334,320 +338,339 @@ function volverAData() {
   btnSend.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar Seleccionados';
 }
 
-  // ============= FUNCIONES DE ENVÍO =============
+// ============= FUNCIONES DE ENVÍO =============
 
-  function iniciarEnvio() {
-    var validacion = validarDatosPreEnvio();
+function iniciarEnvio() {
+  var validacion = validarDatosPreEnvio();
 
-    if (!validacion.valid) {
-      var mensaje = mostrarConfirmacionEnvio(validacion);
-      var modalHtml =
-        '<div class="modal fade" id="validacionModal" tabindex="-1">' +
-        '  <div class="modal-dialog">' +
-        '    <div class="modal-content">' +
-        '      <div class="modal-header bg-danger text-white">' +
-        '        <h5 class="modal-title"><i class="fas fa-exclamation-triangle"></i> No se puede continuar</h5>' +
-        '        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>' +
-        '      </div>' +
-        '      <div class="modal-body">' + mensaje + '</div>' +
-        '      <div class="modal-footer">' +
-        '        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>' +
-        '      </div>' +
-        '    </div>' +
-        '  </div>' +
-        '</div>';
-
-      if (!document.getElementById('validacionModal')) {
-        document.body.insertAdjacentHTML('beforeend', modalHtml);
-      }
-
-      var validacionModalEl = new bootstrap.Modal(document.getElementById('validacionModal'));
-      validacionModalEl.show();
-
-      document.getElementById('validacionModal').addEventListener('hidden.bs.modal', function () {
-        this.remove();
-      });
-
-      return;
-    }
-
-    if (validacion.advertencias.length > 0) {
-      var mensaje = mostrarConfirmacionEnvio(validacion);
-      var modalHtml =
-        '<div class="modal fade" id="confirmacionModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">' +
-        '  <div class="modal-dialog">' +
-        '    <div class="modal-content">' +
-        '      <div class="modal-header bg-warning">' +
-        '        <h5 class="modal-title"><i class="fas fa-exclamation-triangle"></i> Confirmar envío</h5>' +
-        '        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>' +
-        '      </div>' +
-        '      <div class="modal-body">' + mensaje + '</div>' +
-        '      <div class="modal-footer">' +
-        '        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>' +
-        '        <button type="button" class="btn btn-success" onclick="continuarEnvio()">Sí, enviar</button>' +
-        '      </div>' +
-        '    </div>' +
-        '  </div>' +
-        '</div>';
-
-      if (!document.getElementById('confirmacionModal')) {
-        document.body.insertAdjacentHTML('beforeend', modalHtml);
-      }
-
-      var confirmacionModalEl = new bootstrap.Modal(document.getElementById('confirmacionModal'));
-      confirmacionModalEl.show();
-
-      document.getElementById('confirmacionModal').addEventListener('hidden.bs.modal', function () {
-        this.remove();
-      });
-
-      return;
-    }
-
-    continuarEnvio();
+  if (!validacion.valid) {
+    var mensaje = mostrarConfirmacionEnvio(validacion);
+    var modal = document.getElementById('validacionModal');
+    var inputMsj = document.getElementById('errorText');
+    inputMsj.innerHTML = mensaje;
+    var validacionModalEl = new bootstrap.Modal(modal);
+    validacionModalEl.show();
+    return;
   }
 
-  function validarDatosPreEnvio() {
-    var errores = [];
-    var advertencias = [];
-    var alumnosSeleccionados = [];
+  if (validacion.advertencias.length >= 0) {
+    var mensaje = mostrarConfirmacionEnvio(validacion);
+    var modal = document.getElementById('confirmacionModal');
+    var inputMsj = document.getElementById('confirmText');
+    inputMsj.innerHTML = mensaje;
+    var confirmacionModalEl = new bootstrap.Modal(modal);
+    confirmacionModalEl.show();
+    return;
+  }
 
-    for (var i = 0; i < datosFiltrados.length; i++) {
-      if (seleccionados.has(datosFiltrados[i].dni)) {
-        alumnosSeleccionados.push(datosFiltrados[i]);
+  // Si todo está bien, continuar directamente
+  continuarEnvio();
+}
+
+function validarDatosPreEnvio() {
+  var errores = [];
+  var advertencias = [];
+  var alumnosSeleccionados = [];
+
+  // CORREGIDO: Solo tomar los que están realmente seleccionados
+  for (var i = 0; i < datosOriginales.length; i++) {
+    var alumno = datosOriginales[i];
+    if (alumno.dni && seleccionados.has(alumno.dni)) {
+      alumnosSeleccionados.push(alumno);
+    }
+  }
+
+  if (alumnosSeleccionados.length === 0) {
+    errores.push('No hay registros seleccionados');
+    return { valid: false, errores: errores, advertencias: advertencias };
+  }
+
+  var subject = document.getElementById('subject').value.trim();
+  if (!subject) {
+    errores.push('El campo "Asunto" es obligatorio');
+  }
+
+  var sinPDF = 0;
+  var sinDNI = 0;
+  var alumnoEnviado = 0;
+
+  for (var i = 0; i < alumnosSeleccionados.length; i++) {
+    var alumno = alumnosSeleccionados[i];
+    if (!alumno.dni || alumno.dni === '') {
+      sinDNI++;
+    }
+    if (!alumno.mergedDocUrl && !alumno.linkToMergedDoc) {
+      sinPDF++;
+    }
+    if (alumno.enviado === "TRUE" || alumno.enviado === true) {
+      alumnoEnviado++;
+    }
+  }
+
+  if (sinDNI > 0) {
+    errores.push(sinDNI + ' alumno(s) sin DNI válido');
+  }
+
+  if (sinPDF > 0) {
+    advertencias.push(sinPDF + ' alumno(s) sin PDF asignado (se saltarán)');
+  }
+
+
+  if (alumnoEnviado > 0) {
+    advertencias.push(alumnoEnviado + ' boletin(es) ya han sido enviados (se saltarán)');
+  }
+
+  if (alumnosSeleccionados.length > 50) {
+    advertencias.push('Vas a enviar ' + alumnosSeleccionados.length + ' boletines. Esto puede tardar varios minutos.');
+  }
+
+  return {
+    valid: errores.length === 0,
+    errores: errores,
+    advertencias: advertencias
+  };
+}
+
+function mostrarConfirmacionEnvio(validacion) {
+  var mensaje = '<div class="mb-3">';
+
+  if (validacion.errores.length > 0) {
+    mensaje += '<div class="alert alert-danger" role="alert">';
+    mensaje += '<strong><i class="fas fa-exclamation-circle"></i> Errores:</strong><ul class="mb-0 mt-2">';
+    for (var i = 0; i < validacion.errores.length; i++) {
+      mensaje += '<li>' + validacion.errores[i] + '</li>';
+    }
+    mensaje += '</ul></div>';
+  }
+
+  if (validacion.advertencias.length > 0) {
+    mensaje += '<div class="alert alert-warning" role="alert">';
+    mensaje += '<strong><i class="fas fa-exclamation-triangle"></i> Advertencias:</strong><ul class="mb-0 mt-2">';
+    for (var i = 0; i < validacion.advertencias.length; i++) {
+      mensaje += '<li>' + validacion.advertencias[i] + '</li>';
+    }
+    mensaje += '</ul></div>';
+  }
+
+  if (validacion.valid) {
+    // Calcular cuántos son válidos
+    var alumnosSeleccionados = [];
+    for (var i = 0; i < datosOriginales.length; i++) {
+      var alumno = datosOriginales[i];
+      if (alumno.dni && seleccionados.has(alumno.dni)) {
+        alumnosSeleccionados.push(alumno);
       }
     }
 
-    if (alumnosSeleccionados.length === 0) {
-      errores.push('No hay registros seleccionados');
-      return { valid: false, errores: errores, advertencias: advertencias };
-    }
-
-    var subject = document.getElementById('subject').value.trim();
-    if (!subject) {
-      errores.push('El campo "Asunto" es obligatorio');
-    }
-
-    var sinPDF = 0;
-    var sinDNI = 0;
-
+    // Contar cuántos pasarán la validación
+    var alumnosValidos = 0;
     for (var i = 0; i < alumnosSeleccionados.length; i++) {
       var alumno = alumnosSeleccionados[i];
-      if (!alumno.dni || alumno.dni === '') {
-        sinDNI++;
+      
+      // Solo contar los que tienen DNI, PDF y NO han sido enviados
+      if ((alumno.dni && alumno.dni !== '') &&
+          (alumno.mergedDocUrl || alumno.linkToMergedDoc) &&
+          (alumno.enviado !== "TRUE" && alumno.enviado !== true)) {
+        alumnosValidos++;
       }
-      if (!alumno.mergedDocUrl && !alumno.linkToMergedDoc) {
-        sinPDF++;
-      }
     }
 
-    if (sinDNI > 0) {
-      errores.push(sinDNI + ' alumno(s) sin DNI válido');
-    }
-
-    if (sinPDF > 0) {
-      advertencias.push(sinPDF + ' alumno(s) sin PDF asignado (se saltarán)');
-    }
-
-    if (alumnosSeleccionados.length > 50) {
-      advertencias.push('Vas a enviar ' + alumnosSeleccionados.length + ' boletines. Esto puede tardar varios minutos.');
-    }
-
-    return {
-      valid: errores.length === 0,
-      errores: errores,
-      advertencias: advertencias
-    };
+    mensaje += '<div class="alert alert-info" role="alert">';
+    mensaje += '<strong><i class="fas fa-info-circle"></i> Resumen:</strong>';
+    mensaje += '<ul class="mb-0 mt-2">';
+    mensaje += '<li>Seleccionados: <strong>' + alumnosSeleccionados.length + '</strong> registros</li>';
+    mensaje += '<li>Se enviarán: <strong>' + alumnosValidos + '</strong> boletines</li>';
+    mensaje += '<li>Asunto: <strong>' + document.getElementById('subject').value + '</strong></li>';
+    mensaje += '</ul></div>';
+    mensaje += '<p class="text-center mb-0"><strong>¿Deseas continuar con el envío?</strong></p>';
   }
 
-  function mostrarConfirmacionEnvio(validacion) {
-    var mensaje = '<div class="mb-3">';
+  mensaje += '</div>';
+  return mensaje;
+}
 
-    if (validacion.errores.length > 0) {
-      mensaje += '<div class="alert alert-danger" role="alert">';
-      mensaje += '<strong><i class="fas fa-exclamation-circle"></i> Errores:</strong><ul class="mb-0 mt-2">';
-      for (var i = 0; i < validacion.errores.length; i++) {
-        mensaje += '<li>' + validacion.errores[i] + '</li>';
-      }
-      mensaje += '</ul></div>';
-    }
-
-    if (validacion.advertencias.length > 0) {
-      mensaje += '<div class="alert alert-warning" role="alert">';
-      mensaje += '<strong><i class="fas fa-exclamation-triangle"></i> Advertencias:</strong><ul class="mb-0 mt-2">';
-      for (var i = 0; i < validacion.advertencias.length; i++) {
-        mensaje += '<li>' + validacion.advertencias[i] + '</li>';
-      }
-      mensaje += '</ul></div>';
-    }
-
-    if (validacion.valid) {
-      var alumnosSeleccionados = [];
-      for (var i = 0; i < datosFiltrados.length; i++) {
-        if (seleccionados.has(datosFiltrados[i].dni)) {
-          alumnosSeleccionados.push(datosFiltrados[i]);
-        }
-      }
-
-      mensaje += '<div class="alert alert-info" role="alert">';
-      mensaje += '<strong><i class="fas fa-info-circle"></i> Resumen:</strong>';
-      mensaje += '<ul class="mb-0 mt-2">';
-      mensaje += '<li>Total a enviar: <strong>' + alumnosSeleccionados.length + '</strong> boletines</li>';
-      mensaje += '<li>Asunto: <strong>' + document.getElementById('subject').value + '</strong></li>';
-      mensaje += '<li>Tiempo estimado: <strong>~' + Math.ceil(alumnosSeleccionados.length * 0.5 / 60) + ' minutos</strong></li>';
-      mensaje += '</ul></div>';
-      mensaje += '<p class="text-center mb-0"><strong>¿Deseas continuar con el envío?</strong></p>';
-    }
-
-    mensaje += '</div>';
-    return mensaje;
+function continuarEnvio() {
+  var confirmacionModal = bootstrap.Modal.getInstance(document.getElementById('confirmacionModal'));
+  if (confirmacionModal) {
+    confirmacionModal.hide();
   }
 
-  function continuarEnvio() {
-    var confirmacionModal = bootstrap.Modal.getInstance(document.getElementById('confirmacionModal'));
-    if (confirmacionModal) {
-      confirmacionModal.hide();
+  var audienceType = document.getElementById('audienceType').value;
+  var subject = document.getElementById('subject').value.trim();
+  var contactDescripcion = document.getElementById('contactDescripcion').value.trim();
+ 
+  // Obtener todos los seleccionados
+  var alumnosSeleccionados = [];
+  for (var i = 0; i < datosOriginales.length; i++) {
+    var alumno = datosOriginales[i];
+    if (alumno.dni && seleccionados.has(alumno.dni)) {
+      alumnosSeleccionados.push(alumno);
     }
+  }
 
-    var audienceType = document.getElementById('audienceType').value;
-    var subject = document.getElementById('subject').value.trim();
-    var contactDescripcion = document.getElementById('contactDescripcion').value.trim();
-
-    var alumnosSeleccionados = [];
-    for (var i = 0; i < datosFiltrados.length; i++) {
-      if (seleccionados.has(datosFiltrados[i].dni)) {
-        alumnosSeleccionados.push(datosFiltrados[i]);
-      }
+  // FILTRAR: Solo enviar los que pasaron la validación
+  var alumnosValidos = [];
+  for (var i = 0; i < alumnosSeleccionados.length; i++) {
+    var alumno = alumnosSeleccionados[i];
+    
+    // Excluir si NO tiene DNI
+    if (!alumno.dni || alumno.dni === '') {
+      continue;
     }
-
-    var datosEnvio = [];
-    for (var i = 0; i < alumnosSeleccionados.length; i++) {
-      var alumno = alumnosSeleccionados[i];
-      datosEnvio.push({
-        dni: alumno.dni,
-        nombre: alumno.nombre,
-        apellido: alumno.apellido,
-        seccion: alumno.seccion,
-        linkPDF: alumno.mergedDocUrl || alumno.linkToMergedDoc || ''
-      });
+    
+    // Excluir si NO tiene PDF
+    if (!alumno.mergedDocUrl && !alumno.linkToMergedDoc) {
+      continue;
     }
+    
+    // Excluir si YA fue enviado
+    if (alumno.enviado === "TRUE" || alumno.enviado === true) {
+      continue;
+    }
+    
+    // Si pasó todas las validaciones, agregarlo
+    alumnosValidos.push(alumno);
+  }
 
-    var progressModal = new bootstrap.Modal(document.getElementById('progressModal'));
-    progressModal.show();
+  // Validación adicional: verificar que haya al menos uno válido
+  if (alumnosValidos.length === 0) {
+    mostrarError('No hay alumnos válidos para enviar después de aplicar las validaciones.');
+    return;
+  }
 
-    var progressContainer = document.getElementById('progressContainer');
-    progressContainer.innerHTML = '';
+  // Preparar datos SOLO de los válidos
+  var datosEnvio = [];
+  for (var i = 0; i < alumnosValidos.length; i++) {
+    var alumno = alumnosValidos[i];
+    datosEnvio.push({
+      dni: alumno.dni,
+      nombre: alumno.nombre,
+      apellido: alumno.apellido,
+      seccion: alumno.seccion,
+      linkPDF: alumno.mergedDocUrl || alumno.linkToMergedDoc || ''
+    });
+  }
 
-    var btnCerrar = document.getElementById('btnCerrarProgreso');
-    btnCerrar.disabled = true;
+  var progressModal = new bootstrap.Modal(document.getElementById('progressModal'));
+  progressModal.show();
 
-    var spinnerEnvio = document.getElementById('spinnerEnvio');
-    spinnerEnvio.style.display = 'inline-block';
+  var btnCerrar = document.getElementById('btnCerrarProgreso');
+  btnCerrar.disabled = true;
 
-    document.getElementById('progressBar').style.width = '0%';
-    document.getElementById('progressText').textContent = '0 de ' + datosEnvio.length;
+  var progressText = document.getElementById('progressText');
+  progressText.innerHTML = 'Enviando ' + datosEnvio.length + ' registros...';
 
-    google.script.run
-      .withSuccessHandler(function (resultado) {
-        spinnerEnvio.style.display = 'none';
+  google.script.run
+    .withSuccessHandler(function (resultado) {
+      progressText.innerHTML = '';
+      
+      var exitosos = 0;
+      var errores = 0;
 
-        var exitosos = 0;
-        var errores = 0;
+      for (var index = 0; index < resultado.length; index++) {
+        var item = resultado[index];
+        var alumno = alumnosValidos[index]; // USAR alumnosValidos en lugar de alumnosSeleccionados
 
-        for (var index = 0; index < resultado.length; index++) {
-          var item = resultado[index];
-          var alumno = alumnosSeleccionados[index];
+        var progressItem = document.createElement('div');
 
-          var progressItem = document.createElement('div');
+        if (item.success) {
+          progressItem.className = 'progress-item success';
+          progressItem.innerHTML =
+            '<span><i class="fas fa-check-circle text-success"></i> ' +
+            alumno.nombre + ' ' + alumno.apellido + '</span>' +
+            '<span class="text-success">Enviado</span>';
 
-          if (item.success) {
-            progressItem.className = 'progress-item success';
-            progressItem.innerHTML =
-              '<span><i class="fas fa-check-circle text-success"></i> ' +
-              alumno.nombre + ' ' + alumno.apellido + '</span>' +
-              '<span class="text-success">Enviado</span>';
+          var fechaEnvio = new Date().toLocaleString('es-AR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          }); 
 
-            var fechaEnvio = new Date().toLocaleString('es-AR', {
-              day: '2-digit',
-              month: '2-digit',
-              year: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit'
-            });
+          alumno.enviado = true;
+          alumno.fechaEnvio = fechaEnvio;
+          alumno.postId = item.postId;
 
-            alumno.enviado = true;
-            alumno.fechaEnvio = fechaEnvio;
-            alumno.postId = item.postId;
-
-            for (var j = 0; j < datosOriginales.length; j++) {
-              if (datosOriginales[j].dni === alumno.dni) {
-                datosOriginales[j].enviado = true;
-                datosOriginales[j].fechaEnvio = fechaEnvio;
-                datosOriginales[j].postId = item.postId;
-                break;
-              }
+          // Actualizar en datosOriginales
+          for (var j = 0; j < datosOriginales.length; j++) {
+            if (datosOriginales[j].dni === alumno.dni) {
+              datosOriginales[j].enviado = true;
+              datosOriginales[j].fechaEnvio = fechaEnvio;
+              datosOriginales[j].postId = item.postId;
+              break;
             }
-
-            actualizarEstadoVisual(alumno.dni, true, fechaEnvio);
-            exitosos++;
-          } else {
-            progressItem.className = 'progress-item error';
-            progressItem.innerHTML =
-              '<span><i class="fas fa-times-circle text-danger"></i> ' +
-              alumno.nombre + ' ' + alumno.apellido + '</span>' +
-              '<span class="text-danger">' + (item.error || 'Error') + '</span>';
-
-            actualizarEstadoVisual(alumno.dni, false);
-            errores++;
           }
 
-          progressContainer.appendChild(progressItem);
+          // Actualizar en datosFiltrados
+          for (var k = 0; k < datosFiltrados.length; k++) {
+            if (datosFiltrados[k].dni === alumno.dni) {
+              datosFiltrados[k].enviado = true;
+              datosFiltrados[k].fechaEnvio = fechaEnvio;
+              datosFiltrados[k].postId = item.postId;
+              break;
+            }
+          }
 
-          var progreso = Math.round(((index + 1) / resultado.length) * 100);
-          document.getElementById('progressBar').style.width = progreso + '%';
-          document.getElementById('progressText').textContent = (index + 1) + ' de ' + resultado.length;
+          actualizarEstadoVisual(alumno.dni, true, fechaEnvio);
+          exitosos++;
+        } else {
+          progressItem.className = 'progress-item error';
+          progressItem.innerHTML =
+            '<span><i class="fas fa-times-circle text-danger"></i> ' +
+            alumno.nombre + ' ' + alumno.apellido + '</span>' +
+            '<span class="text-danger">' + (item.error || 'Error') + '</span>';
+
+          actualizarEstadoVisual(alumno.dni, false);
+          errores++;
         }
 
-        progressContainer.scrollTop = progressContainer.scrollHeight;
+        progressContainer.appendChild(progressItem);
+      }
 
-        btnCerrar.disabled = false;
-        btnCerrar.onclick = function () {
-          progressModal.hide();
-          mostrarResumenFinal(exitosos, errores, datosEnvio.length);
-        };
+      progressContainer.scrollTop = progressContainer.scrollHeight;
 
-        actualizarEstadisticas();
-        seleccionados.clear();
-        document.getElementById('selectAll').checked = false;
-        actualizarContadorSeleccionados();
-      })
-      .withFailureHandler(function (error) {
-        spinnerEnvio.style.display = 'none';
+      btnCerrar.disabled = false;
+      progressText.innerHTML = 'Procesamiento completado';
+      btnCerrar.onclick = function () {
+      progressModal.hide();   
+        mostrarResumenFinal(exitosos, errores, datosEnvio.length);
+      };
 
-        progressContainer.innerHTML =
-          '<div class="progress-item error">' +
-          '<span><i class="fas fa-exclamation-triangle text-danger"></i> Error general</span>' +
-          '<span class="text-danger">' + error.message + '</span>' +
-          '</div>';
+      actualizarEstadisticas();
+      seleccionados.clear();
+      var selectAllCheckbox = document.getElementById('selectAll');
+      if (selectAllCheckbox) {
+        selectAllCheckbox.checked = false;
+      }
+      actualizarContadorSeleccionados();
+    })
+    .withFailureHandler(function (error) {
+      progressText.innerHTML = '<strong class="text-danger">Error en el proceso</strong>';
+      
+      progressContainer.innerHTML =
+        '<div class="progress-item error">' +
+        '<span><i class="fas fa-exclamation-triangle text-danger"></i> Error general</span>' +
+        '<span class="text-danger">' + error.message + '</span>' +
+        '</div>';
 
-        btnCerrar.disabled = false;
-        btnCerrar.onclick = function () {
-          progressModal.hide();
-          mostrarError('Error al procesar el envío: ' + error.message);
-        };
-      })
-      .run(datosEnvio, audienceType, subject, contactDescripcion);
-  }
+      btnCerrar.disabled = false;
+      btnCerrar.onclick = function () {
+        progressModal.hide();
+        mostrarError('Error al procesar el envío: ' + error.message);
+      };
+    })
+    .run(datosEnvio, audienceType, subject, contactDescripcion);
+}
 
-  function mostrarResumenFinal(exitosos, errores, total) {
-    document.getElementById('exitososCount').textContent = exitosos;
-    document.getElementById('erroresCount').textContent = errores;
-    document.getElementById('totalCount').textContent = total;
+function mostrarResumenFinal(exitosos, errores, total) {
+  document.getElementById('exitososCount').textContent = exitosos;
+  document.getElementById('erroresCount').textContent = errores;
+  document.getElementById('totalCount').textContent = total;
 
-    var completedModal = new bootstrap.Modal(document.getElementById('completedModal'));
-    completedModal.show();
-  }
-
+  var completedModal = new bootstrap.Modal(document.getElementById('completedModal'));
+  completedModal.show();
+}
   // ============= FUNCIONES DE LIMPIEZA =============
 
   function limpiarEnviados() {
@@ -677,7 +700,7 @@ function confirmarLimpiarEnviados() {
   var confirmModal = bootstrap.Modal.getInstance(document.getElementById('confirmLimpiarModal'));
   var btnConfirmar = document.querySelector('#confirmLimpiarModal .btn-warning');
   var btnCancelar = document.querySelector('#confirmLimpiarModal .btn-secondary');
-  
+
   btnConfirmar.disabled = true;
   btnCancelar.disabled = true;
   btnConfirmar.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Limpiando...';
@@ -686,17 +709,14 @@ function confirmarLimpiarEnviados() {
     .withSuccessHandler(function (resultado) {
       if (resultado.success) {
         confirmModal.hide();
-
         var textoReg = document.querySelector('#resultadoReg');
         textoReg.innerHTML = 'Se limpiaron ' + resultado.registros + ' registros.';
         var textoHis = document.querySelector('#resultadoHis');
         textoHis.innerHTML = 'Se movieron ' + resultado.historial + ' registros al historial.';
-
-
+        
         var finishModal = new bootstrap.Modal(document.getElementById('finalizarLimpiarModal'));
         finishModal.show();
-
-
+        
 
         // Si estamos en modo historial, volver a Data
         if (modoHistorial) {
@@ -706,6 +726,7 @@ function confirmarLimpiarEnviados() {
         // Recargar datos de la hoja Data
         google.script.run
           .withSuccessHandler(function(data) {
+
             if (data) {
               datosOriginales = data || [];
               datosFiltrados = datosOriginales.slice();
@@ -720,6 +741,7 @@ function confirmarLimpiarEnviados() {
               llenarCursos();
               mostrarTabla();
               actualizarEstadisticas();
+
             }
           })
           .withFailureHandler(function(error) {
