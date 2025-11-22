@@ -97,7 +97,6 @@ function obtenerDatos(sheetId, sheetName) {
   }
 }
 
-
 // Obtener datos de hoja de Sheet y pasar a JSON
 function obtenerHistorial(sheetId, sheetName) {
   if (!sheetId || !sheetName) {
@@ -167,6 +166,7 @@ function obtenerHistorial(sheetId, sheetName) {
     throw error;
   }
 }
+
 // Copia los datos a la hoja en donde se ejecuta
 function copyData(datos) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -275,21 +275,45 @@ function clientAPILog(response, apiEndpoint, requestData) {
   
   try {
     if (!response) {
-      row.push(timestamp, apiEndpoint, 'N/A', 'Error', '', '', 
-               requestData ? requestData.uid || '' : '', 
-               requestData ? requestData.subject || '' : '', '',
-               'No se recibió respuesta de la API');
+      row.push(
+        timestamp, 
+        apiEndpoint, 
+        'N/A', 
+        'Error', 
+        'No se generó Post ID', 
+        'No se generó Post URL',
+        'No se recibió respuesta de la API. Error: ' + requestData ? requestData.error : 'Error desconocido',
+        requestData ? requestData.uid || '' : '', 
+        requestData ? requestData.subject || '' : '', 
+        ''
+      );
     } else if (response.status === 'success' && response.post_id) {
-      row.push(timestamp, apiEndpoint, 201, 'Success', 
-               response.post_id, response.post_url || '',
-               requestData ? requestData.uid || '' : '',
-               requestData ? requestData.subject || '' : '',
-               requestData ? (requestData.report_pdf || '') : '', '');
+      row.push(
+        timestamp, 
+        apiEndpoint, 
+        201, 
+        'Success', 
+        response.post_id,
+        response.post_url || '',
+        'Sin errores',
+        requestData ? requestData.uid || '' : '',
+        requestData ? requestData.subject || '' : '',
+        requestData ? (requestData.report_pdf || '') : '',
+        ''
+      );
     } else if (response.status === 'error') {
-      row.push(timestamp, apiEndpoint, response.error_code || 400, 'Error', '', '',
-               requestData ? requestData.uid || '' : '',
-               requestData ? requestData.subject || '' : '', '',
-               response.error_message || 'Error desconocido');
+      row.push(
+        timestamp, 
+        apiEndpoint, 
+        response.error_code || 400, 
+        'Error', 
+        'No se generó post ID', 
+        'No se generó post URL',
+        requestData ? requestData.uid || '' : '',
+        requestData ? requestData.subject || '' : '',
+        'No se generó Link',
+        response.error_message || 'Error desconocido'
+        );
     }
     
     if (row.length > 0) {
@@ -534,7 +558,6 @@ function cleanRegister() {
 
     // Mover al historial
     if (alumnosEnviados.length > 0) {
-      moverAHistorial(alumnosEnviados);
       
       // Ordenar de mayor a menor para eliminar desde el final
       filasAEliminar.sort(function(a, b) { return b - a; });
@@ -543,7 +566,6 @@ function cleanRegister() {
         sheet.deleteRow(filasAEliminar[i]);
       }
       
-      Logger.log('Eliminadas ' + filasAEliminar.length + ' filas de Data');
     }
 
     return {

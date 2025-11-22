@@ -40,8 +40,9 @@ function getData(spreadsheetId, sheetName) {
 
   try{
     const datos = obtenerDatos(spreadsheetId, sheetName);
+    const historial = obtenerHistorial(spreadsheetId, "Historial");
     copyData(datos);
-    generarVista(datos, "main");
+    generarVista(datos, historial, "main");
   } catch(error){
     Logger.log("Error en generarVista: " + error.toString());
     throw new Error('Error al generar la vista: ' + error.toString());
@@ -125,10 +126,9 @@ function run(alumnos, audienceType, subject, contactDescripcion) {
   if (!token) {
     throw new Error('No se pudo obtener el token de autorización');
   }
-  
+
   // Procesar cada alumno
-  alumnos.forEach(function(alumno, index) {
-    const logPrefix = '[' + (index + 1) + '/' + alumnos.length + ']';
+  alumnos.forEach(function(alumno) {
     
     try {
       // Validar que tenga PDF
@@ -143,7 +143,7 @@ function run(alumnos, audienceType, subject, contactDescripcion) {
       
       // Extraer ID del archivo de Drive
       const fileId = extraerDriveFileId(alumno.linkPDF);
-      
+
       if (!fileId) {
         resultados.push({
           success: false,
@@ -155,7 +155,6 @@ function run(alumnos, audienceType, subject, contactDescripcion) {
       
       // Validar que el archivo exista y sea accesible
       const validacion = validarDriveFileId(fileId);
-      
       if (!validacion.valid) {
         resultados.push({
           success: false,
@@ -210,7 +209,6 @@ function run(alumnos, audienceType, subject, contactDescripcion) {
           fechaEnvio: fechaEnvio,
           postId: response.post_id
         });
-          
         clientAPILog(response, 'EnvioBoletinesPDF', {
           uid: alumno.dni,
           subject: subject,
@@ -218,16 +216,22 @@ function run(alumnos, audienceType, subject, contactDescripcion) {
         });
         
       } else {
+        const errMsg = (response && response.error_message) ? response.error_message : 'No se recibió respuesta válida de la API';
+
         resultados.push({
           success: false,
           dni: alumno.dni,
-          error: 'No se recibió respuesta válida de la API'
+          error: errMsg
         });
-              clientAPILog(null, 'EnvioBoletinesPDF', {
-        uid: alumno.dni,
-        subject: subject,
-        error: error.message
-      });
+
+        Logger.log(resultados)
+        Logger.log(response)
+        
+        clientAPILog(null, 'EnvioBoletinesPDF', {
+          uid: alumno.dni,
+          subject: subject,
+          error: errMsg
+        });
       }
       
     } catch (error) {
@@ -237,10 +241,10 @@ function run(alumnos, audienceType, subject, contactDescripcion) {
         error: error.message || 'Error desconocido'
       });
       
-      clientAPILog(null, 'EnvioBoletinesPDF', {
+      clientAPILog(error, 'EnvioBoletinesPDF', {
         uid: alumno.dni,
         subject: subject,
-        error: error.message
+        error: error.message || 'Error desconocido'
       });
     }
     

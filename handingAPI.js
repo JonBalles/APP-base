@@ -13,9 +13,11 @@ const URL = "https://integraciones.handing.co";
 const API_USER_NAME = 'gestion-alumnos-beth'
 const APIKEY = 'c75bb813d6bb857315500c225d5397b3c07593f49f07879b8daf5d69b7cfe8f2bf674fd9892396bb27c66334b9d0249eb64e'
 */
+
 // ============= FUNCIONES DE AUTENTICACIÓN =============
 
 function getAuthorizationToken() {
+
   const url = URL + "/api/v2/auth/application";
   const data = {
     'api_username': API_USER_NAME,
