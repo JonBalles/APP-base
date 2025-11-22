@@ -284,9 +284,7 @@ function clientAPILog(response, apiEndpoint, requestData) {
         'No se generó Post URL',
         'No se recibió respuesta de la API. Error: ' + requestData ? requestData.error : 'Error desconocido',
         requestData ? requestData.uid || '' : '', 
-        requestData ? requestData.subject || '' : '', 
-        ''
-      );
+        requestData ? requestData.subject || '' : '', '');
     } else if (response.status === 'success' && response.post_id) {
       row.push(
         timestamp, 
@@ -299,8 +297,7 @@ function clientAPILog(response, apiEndpoint, requestData) {
         requestData ? requestData.uid || '' : '',
         requestData ? requestData.subject || '' : '',
         requestData ? (requestData.report_pdf || '') : '',
-        ''
-      );
+        '');
     } else if (response.status === 'error') {
       row.push(
         timestamp, 
@@ -558,6 +555,7 @@ function cleanRegister() {
 
     // Mover al historial
     if (alumnosEnviados.length > 0) {
+      moverAHistorial(alumnosEnviados);
       
       // Ordenar de mayor a menor para eliminar desde el final
       filasAEliminar.sort(function(a, b) { return b - a; });
@@ -566,6 +564,7 @@ function cleanRegister() {
         sheet.deleteRow(filasAEliminar[i]);
       }
       
+      Logger.log('Eliminadas ' + filasAEliminar.length + ' filas de Data');
     }
 
     return {
