@@ -638,6 +638,10 @@
         progressText.innerHTML = 'Procesamiento completado';
         document.getElementById('sendingSpinner').style.display = 'none';
         document.getElementById('spinnerEnvio').style.display = 'none';
+        document.getElementById('progressHeader').classList.remove('bg-primary');
+        document.getElementById('progressHeader').classList.add('bg-success');
+        
+        
         btnCerrar.onclick = function () {
         progressModal.hide();   
           mostrarResumenFinal(exitosos, errores, datosEnvio.length);

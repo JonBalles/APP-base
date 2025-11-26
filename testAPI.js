@@ -66,3 +66,19 @@ function testEnviarBoletinPDF() {
     Logger.log('Error al enviar el boletín');
   }
 }
+
+
+function testStart(){
+  let contador = 0;
+
+  while(contador < 50){
+    setTimeout(function () {
+      Logger.log("numero de veces: " + contador)
+      contador++;
+    }, 3000);
+  }
+}
+
+function testStop(){
+
+}
